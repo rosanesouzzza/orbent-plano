@@ -1,0 +1,5 @@
+{
+  "name": "Action Plan Dashboard",
+  "description": "An application to manage action plans with a dashboard and an executive report feature powered by Gemini. Users can track tasks, responsible parties, and deadlines, visualize progress, and generate AI-powered summaries.",
+  "requestFramePermissions": []
+}

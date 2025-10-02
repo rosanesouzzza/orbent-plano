@@ -1,0 +1,85 @@
+{
+  "plans": [
+    {
+      "id": 1,
+      "planCode": "ALU-001",
+      "clientName": "Restaurante Matriz",
+      "planName": "Melhorias Pós-Auditoria Interna",
+      "emissionDate": "2024-07-15",
+      "reason": "Auditoria Interna",
+      "ownerId": 1,
+      "planOwnerName": "Coordenador de Qualidade",
+      "status": "Em Andamento",
+      "actionItems": [
+        {
+          "id": 1,
+          "desvioPontoMelhoria": "Otimizar controle de temperatura dos freezers",
+          "origem": "Auditoria Interna",
+          "acaoParaMitigacao": "Reforçar e manter as auditorias internas já previstas no escopo, com checagem de temperatura 2x ao dia.",
+          "departamentosEnvolvidos": ["Operações", "Qualidade"],
+          "responsavel": "Gerente de Operações",
+          "prazo": "2024-08-30",
+          "evidencia": "Planilhas de controle de temperatura preenchidas.",
+          "verificacao": "Ausência de não-conformidades de temperatura na próxima auditoria.",
+          "status": "Ajustadas e em plena execução",
+          "tipo": "Corretiva",
+          "priority": "Alta",
+          "pilarEstrategico": "Qualidade e Segurança de Alimentos (Food Safety)",
+          "tags": ["temperatura", "auditoria"]
+        },
+        {
+          "id": 2,
+          "desvioPontoMelhoria": "Padronizar higienização de bancadas",
+          "origem": "Auditoria Interna",
+          "acaoParaMitigacao": "Intensificar treinamentos com a equipe sobre os procedimentos operacionais padrão (POPs) de higienização.",
+          "departamentosEnvolvidos": ["Operações", "Recursos Humanos"],
+          "responsavel": "Nutricionista de produção",
+          "prazo": "2024-09-15",
+          "evidencia": "Lista de presença e material do treinamento.",
+          "verificacao": "Redução de 95% em apontamentos de higienização.",
+          "status": "Processos intensificados e otimizados",
+          "tipo": "Preventiva",
+          "priority": "Média",
+          "pilarEstrategico": "Qualidade e Segurança de Alimentos (Food Safety)",
+          "tags": ["higiene", "treinamento"]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "planCode": "ALU-002",
+      "clientName": "Cliente Indústria B",
+      "planName": "Plano de Ação - Feedback Cliente",
+      "emissionDate": "2024-06-20",
+      "conclusionDate": "2024-07-25",
+      "reason": "Feedback de Cliente",
+      "ownerId": 1,
+      "planOwnerName": "Diretora Comercial",
+      "status": "Concluído",
+      "actionItems": [
+         {
+          "id": 3,
+          "desvioPontoMelhoria": "Aumentar variedade no cardápio de saladas",
+          "origem": "Feedback de Cliente",
+          "acaoParaMitigacao": "Aprimorar o planejamento de cardápios para incluir 3 novas opções de saladas semanais.",
+          "departamentosEnvolvidos": ["Pesquisa e Desenvolvimento", "Operações"],
+          "responsavel": "Nutricionista de produção",
+          "prazo": "2024-07-20",
+          "evidencia": "Cardápios atualizados e fotos das novas opções.",
+          "verificacao": "Aumento de 15% na pesquisa de satisfação relacionada ao item 'variedade'.",
+          "status": "Concluído",
+          "tipo": "Melhoria",
+          "priority": "Média",
+          "pilarEstrategico": "Experiência e Relacionamento com o Cliente",
+          "tags": ["cardapio", "cliente"]
+        }
+      ]
+    }
+  ],
+  "reports": [],
+  "user": {
+    "id": 1,
+    "name": "Usuário Padrão",
+    "email": "user@orbent.com.br"
+  }
+}
