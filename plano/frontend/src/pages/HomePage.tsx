@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { getPlans } from '../services/dataClient';
+// Verifique se o caminho do import está correto para seu projeto
+import { getPlans } from '../lib/api';
 import type { Plan } from '../types';
 
 export default function HomePage() {
@@ -27,11 +28,15 @@ export default function HomePage() {
     <div className="p-6">
       <h1 className="text-2xl font-semibold mb-4">Planos existentes</h1>
       <ul className="space-y-2">
-        {plans.map((p: Plan) => (
+        {/*
+          Adicionamos a verificação 'Array.isArray(plans) &&'
+          como uma camada extra de segurança.
+        */}
+        {Array.isArray(plans) && plans.map((p: Plan) => (
           <li key={p.id} className="rounded border p-3">
             <div className="font-medium">{p.planCode} — {p.planName}</div>
             <div className="text-sm text-gray-600">
-              Cliente: {p.clientName} • Ações: {p.actionItems.length}
+              Cliente: {p.clientName} • Ações: {(p.actionItems ?? []).length} {/* <-- AQUI ESTÁ A CORREÇÃO */}
             </div>
           </li>
         ))}
