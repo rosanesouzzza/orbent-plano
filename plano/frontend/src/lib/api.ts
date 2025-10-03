@@ -21,6 +21,7 @@ export const api = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
   withCredentials: false,
+  timeout: 30000, // <-- ADICIONE ESTA LINHA (30 segundos)
 });
 
 
