@@ -1,67 +1,23 @@
-// src/lib/api.ts
+// plano/frontend/src/lib/api.ts
 import axios from "axios";
 
-/** Base URL (Vite) */
-export const BASE_URL =
-  import.meta.env.VITE_API_URL?.toString() || "http://localhost:8080";
-
-/** Axios client */
-export const api = axios.create({ baseURL: BASE_URL });
-
-/** Tipos */
-export type Plan = { id: number; name: string; owner: string };
-
-export type Action = {
-  id: number;
-  title: string;
-  status: "PENDING" | "IN_PROGRESS" | "DONE";
-  start_date?: string | null;
-  end_date?: string | null;
-  department?: string | null;
-  pillar?: string | null;
-  plan_id: number;
-};
-
-export type ActionCreate = Omit<Action, "id" | "plan_id">;
-export type ActionUpdate = Partial<ActionCreate>;
-
-/** Endpoints */
-export async function getPlans(): Promise<Plan[]> {
-  const { data } = await api.get<Plan[]>("/plans");
-  return data;
-}
-
-export async function getPlanActions(planId: number): Promise<Action[]> {
-  const { data } = await api.get<Action[]>(`/plans/${planId}/actions`);
-  return data;
-}
-
-export async function createAction(
-  planId: number,
-  payload: ActionCreate
-): Promise<Action> {
-  const { data } = await api.post<Action>(`/plans/${planId}/actions`, payload);
-  return data;
-}
-
-export async function updateAction(
-  planId: number,
-  actionId: number,
-  payload: ActionUpdate
-): Promise<Action> {
-  const { data } = await api.put<Action>(
-    `/plans/${planId}/actions/${actionId}`,
-    payload
+/**
+ * Usa SEMPRE a variável VITE_API_BASE_URL definida na Vercel.
+ * Sem fallback para localhost no build.
+ */
+const raw = import.meta.env.VITE_API_BASE_URL;
+if (!raw) {
+  // Ajuda no desenvolvimento: se faltar a env, exibe erro visível no console.
+  console.error(
+    "Faltou configurar VITE_API_BASE_URL. Defina nas variáveis da Vercel (ou .env.local para dev)."
   );
-  return data;
 }
 
-export async function deleteAction(
-  planId: number,
-  actionId: number
-): Promise<{ ok: true }> {
-  await api.delete(`/plans/${planId}/actions/${actionId}`);
-  return { ok: true };
-}
+/** remove barra final se houver */
+const BASE_URL = (raw || "").trim().replace(/\/$/, "");
 
-export default api;
+export const api = axios.create({
+  baseURL: BASE_URL,
+  headers: { "Content-Type": "application/json" },
+  withCredentials: false,
+});
