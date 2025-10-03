@@ -196,19 +196,28 @@ export default function DashboardPage() {
             </thead>
             {/* AQUI ESTÃO AS CORREÇÕES FINAIS PARA EVITAR O ERRO
             */}
-            <tbody>
-              {/* 1. Garante que 'plans' é um array antes de tentar usar o .map */}
-              {Array.isArray(plans) && plans.map((p) => (
-                <tr key={p.id} className="border-b">
-                  <td className="py-2 pr-3">{p.planCode}</td>
-                  <td className="py-2 pr-3">{p.planName}</td>
-                  <td className="py-2 pr-3">{p.clientName}</td>
-                  {/* 2. Garante que 'p.actionItems' não é nulo antes de pegar o .length */}
-                  <td className="py-2 pr-3">{(p.actionItems ?? []).length}</td>
-                  <td className="py-2 pr-3">{p.status}</td>
-                </tr>
-              ))}
-            </tbody>
+            // Em DashboardPage.tsx
+
+<tbody>
+  {Array.isArray(plans) && plans.map((p) => (
+    <tr key={p.id} className="border-b">
+      {/* Aqui estava o problema. Não existe 'p.planCode'.
+        Vamos usar 'p.id' ou outro campo que faça sentido.
+      */}
+      <td className="py-2 pr-3">{p.id}</td>
+
+      {/* Trocamos 'p.planName' por 'p.name' */}
+      <td className="py-2 pr-3">{p.name}</td>
+
+      {/* Trocamos 'p.clientName' por 'p.owner' */}
+      <td className="py-2 pr-3">{p.owner}</td>
+      
+      {/* O resto continua igual e já estava correto */}
+      <td className="py-2 pr-3">{(p.actionItems ?? []).length}</td>
+      <td className="py-2 pr-3">{p.status}</td>
+    </tr>
+  ))}
+</tbody>
           </table>
         </div>
       </section>
