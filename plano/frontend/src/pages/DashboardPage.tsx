@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { getPlans } from "../services/dataClient";
+// O import do seu dataClient pode ter um nome diferente, verifique o caminho correto.
+import { getPlans } from "../lib/api"; 
 import type { Plan, ActionItem } from "../types";
 import {
   ActionStatus,
@@ -43,6 +44,8 @@ export default function DashboardPage() {
 
   // Junta todas as ações
   const allActions = useMemo<ActionItem[]>(() => {
+    // Garante que plans é um array antes de usar flatMap
+    if (!Array.isArray(plans)) return []; 
     return plans.flatMap((p) => p.actionItems ?? []);
   }, [plans]);
 
@@ -89,7 +92,6 @@ export default function DashboardPage() {
 
   // Evolução por mês (usando prazo)
   const byMonth = useMemo(() => {
-    // Contabiliza quantas ações têm prazo em cada mês (YYYY-MM)
     const map = new Map<string, number>();
     for (const a of allActions) {
       if (!a.prazo) continue;
@@ -99,7 +101,6 @@ export default function DashboardPage() {
       map.set(key, (map.get(key) ?? 0) + 1);
     }
     const arr = Array.from(map, ([month, value]) => ({ month, value }));
-    // ordem crescente
     arr.sort((x, y) => x.month.localeCompare(y.month));
     return arr;
   }, [allActions]);
@@ -193,13 +194,17 @@ export default function DashboardPage() {
                 <th className="py-2 pr-3">Status</th>
               </tr>
             </thead>
+            {/* AQUI ESTÃO AS CORREÇÕES FINAIS PARA EVITAR O ERRO
+            */}
             <tbody>
-              {plans.map((p) => (
+              {/* 1. Garante que 'plans' é um array antes de tentar usar o .map */}
+              {Array.isArray(plans) && plans.map((p) => (
                 <tr key={p.id} className="border-b">
                   <td className="py-2 pr-3">{p.planCode}</td>
                   <td className="py-2 pr-3">{p.planName}</td>
                   <td className="py-2 pr-3">{p.clientName}</td>
-                  <td className="py-2 pr-3">{p.actionItems.length}</td>
+                  {/* 2. Garante que 'p.actionItems' não é nulo antes de pegar o .length */}
+                  <td className="py-2 pr-3">{(p.actionItems ?? []).length}</td>
                   <td className="py-2 pr-3">{p.status}</td>
                 </tr>
               ))}

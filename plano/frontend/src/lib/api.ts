@@ -1,6 +1,6 @@
 // plano/frontend/src/lib/api.ts
 import axios from "axios";
-
+import type { Plan } from '../types'; // ou '../types/index'
 /**
  * Usa SEMPRE a variável VITE_API_BASE_URL definida na Vercel.
  * Sem fallback para localhost no build.
@@ -25,16 +25,6 @@ export const api = axios.create({
 });
 
 
-// --- ADICIONE ESTE CÓDIGO NO FINAL DO ARQUIVO ---
-
-// 1. Defina o formato (o "type") dos seus dados.
-//    Este 'type Plan' é o mesmo que o seu HomePage.tsx está tentando importar.
-export type Plan = {
-  id: number; // ou string, dependendo do seu back-end
-  name: string;
-  // Adicione aqui os outros campos que seu plano tem...
-  // Ex: description: string; status: string;
-};
 
 // 2. Crie e EXPORTE a função que está faltando (a "lista de tarefas").
 export const getPlans = async (): Promise<Plan[]> => {
