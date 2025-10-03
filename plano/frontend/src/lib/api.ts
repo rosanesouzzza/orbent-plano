@@ -1,6 +1,8 @@
 // plano/frontend/src/lib/api.ts
 import axios from "axios";
-import type { Plan } from '../types'; // ou '../types/index'
+// Adicionamos 'ActionItem' aqui para a nova função
+import type { Plan, ActionItem } from '../types';
+
 /**
  * Usa SEMPRE a variável VITE_API_BASE_URL definida na Vercel.
  * Sem fallback para localhost no build.
@@ -21,21 +23,30 @@ export const api = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
   withCredentials: false,
-  timeout: 30000, // <-- ADICIONE ESTA LINHA (30 segundos)
+  timeout: 30000,
 });
 
-
-
-// 2. Crie e EXPORTE a função que está faltando (a "lista de tarefas").
+// A função que busca todos os planos (já estava correta)
 export const getPlans = async (): Promise<Plan[]> => {
   try {
-    // Usamos a instância 'api' que você criou para fazer a chamada ao back-end
     const response = await api.get("/plans");
-    // O endpoint aqui ('/plans') deve ser exatamente o mesmo da sua API no back-end
     return response.data;
   } catch (error) {
     console.error("Erro ao buscar planos:", error);
-    // Retorna um array vazio em caso de erro para não quebrar a aplicação
+    return [];
+  }
+};
+
+// ===================================================================
+// AQUI ESTÁ A NOVA FUNÇÃO QUE ESTAVA FALTANDO
+// ===================================================================
+export const getPlanActions = async (planId: number): Promise<ActionItem[]> => {
+  try {
+    // A URL será algo como /plans/1/actions
+    const response = await api.get(`/plans/${planId}/actions`);
+    return response.data;
+  } catch (error) {
+    console.error(`Erro ao buscar ações para o plano ${planId}:`, error);
     return [];
   }
 };
