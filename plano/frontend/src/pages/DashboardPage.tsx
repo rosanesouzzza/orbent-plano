@@ -1,297 +1,235 @@
-// src/pages/DashboardPage.tsx
 import React, { useEffect, useMemo, useState } from "react";
-import { Pie, Bar, Line } from "react-chartjs-2";
-import "chart.js/auto"; // registra automaticamente os elementos (ArcElement, BarElement, etc.)
+import { getPlans } from "../services/dataClient";
+import type { Plan, ActionItem } from "../types";
 import {
-  getPlans,
-  getPlanActions,
-  type Plan,
-  type Action,
-} from "@/lib/api";
+  ActionStatus,
+} from "../types";
+
+// Gráficos
+import { Pie, Bar, Line } from "react-chartjs-2";
+import "chart.js/auto";
 
 // ---- Cores (Orbent) ----
 const COLORS = {
   green: "#10B981",
   blue: "#3B82F6",
-  orange: "#F59E0B",
-  purple: "#6366F1",
+  amber: "#F59E0B",
+  red: "#EF4444",
+  slate: "#64748B",
+  violet: "#8B5CF6",
   teal: "#14B8A6",
-  grayGrid: "#E5E7EB",
-};
-
-// ---- Helpers de agregação ----
-function by<T extends string | number>(arr: Action[], pick: (a: Action) => T) {
-  return arr.reduce<Record<T, number>>((acc, a) => {
-    const k = pick(a);
-    acc[k] = (acc[k] ?? 0) + 1;
-    return acc;
-  }, {} as Record<T, number>);
-}
-
-function countStatus(rows: Action[]) {
-  return {
-    DONE: rows.filter((a) => a.status === "DONE").length,
-    IN_PROGRESS: rows.filter((a) => a.status === "IN_PROGRESS").length,
-    PENDING: rows.filter((a) => a.status === "PENDING").length,
-  };
-}
-
-function donePerDay(rows: Action[]) {
-  // agrupa por data de fim apenas para status DONE
-  const onlyDone = rows.filter((a) => a.status === "DONE" && a.end_date);
-  const byDay = onlyDone.reduce<Record<string, number>>((acc, a) => {
-    const day = (a.end_date ?? "").slice(0, 10);
-    if (!day) return acc;
-    acc[day] = (acc[day] ?? 0) + 1;
-    return acc;
-  }, {});
-  const labels = Object.keys(byDay).sort();
-  const values = labels.map((d) => byDay[d]);
-  return { labels, values };
-}
-
-// ---- Opções Chart.js padrão ----
-const baseBarOptions: any = {
-  responsive: true,
-  maintainAspectRatio: false,
-  scales: {
-    x: {
-      grid: { color: COLORS.grayGrid },
-      ticks: { font: { size: 12 } },
-    },
-    y: {
-      beginAtZero: true,
-      grid: { color: COLORS.grayGrid },
-      ticks: { precision: 0, font: { size: 12 } },
-    },
-  },
-  plugins: {
-    legend: { display: false },
-    tooltip: { enabled: true },
-  },
-};
-
-const baseLineOptions: any = {
-  responsive: true,
-  maintainAspectRatio: false,
-  scales: {
-    x: {
-      grid: { color: COLORS.grayGrid },
-      ticks: { font: { size: 12 } },
-    },
-    y: {
-      beginAtZero: true,
-      grid: { color: COLORS.grayGrid },
-      ticks: { precision: 0, font: { size: 12 } },
-    },
-  },
-  plugins: {
-    legend: { display: false },
-    tooltip: { enabled: true },
-  },
+  rose: "#F43F5E",
 };
 
 export default function DashboardPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [planId, setPlanId] = useState<number | null>(null);
-  const [rows, setRows] = useState<Action[]>([]);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  // carrega os planos
+  // Carrega planos
   useEffect(() => {
-    let mounted = true;
     (async () => {
       try {
+        setLoading(true);
         const data = await getPlans();
-        if (!mounted) return;
         setPlans(data);
-        if (data.length && planId == null) setPlanId(data[0].id);
       } catch (e: any) {
-        setErr("Falha ao carregar planos.");
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // carrega ações do plano selecionado
-  useEffect(() => {
-    if (!planId) return;
-    let mounted = true;
-    setLoading(true);
-    setErr(null);
-    (async () => {
-      try {
-        const data = await getPlanActions(planId);
-        if (!mounted) return;
-        setRows(data);
-      } catch (e: any) {
-        setErr("Falha ao carregar ações do plano.");
+        setError(e?.message ?? "Erro ao carregar planos");
       } finally {
         setLoading(false);
       }
     })();
-    return () => {
-      mounted = false;
-    };
-  }, [planId]);
+  }, []);
 
-  // ---- KPIs ----
-  const status = useMemo(() => countStatus(rows), [rows]);
-  const total = rows.length;
+  // Junta todas as ações
+  const allActions = useMemo<ActionItem[]>(() => {
+    return plans.flatMap((p) => p.actionItems ?? []);
+  }, [plans]);
 
-  // ---- Agregações para gráficos ----
-  const perPillar = useMemo(
-    () => by(rows, (a) => (a.pillar ?? "—") as string),
-    [rows]
-  );
-  const perDept = useMemo(
-    () => by(rows, (a) => (a.department ?? "—") as string),
-    [rows]
-  );
-  const perDay = useMemo(() => donePerDay(rows), [rows]);
+  // Agrupamentos de status (mapeando para os enums atuais)
+  const inProgressSet = new Set<ActionStatus>([
+    ActionStatus.EM_ANDAMENTO,
+    ActionStatus.PROCESSOS_INTENSIFICADOS,
+    ActionStatus.AJUSTADAS_EM_EXECUCAO,
+  ]);
 
-  // ---- Datasets ----
-  const pieData = {
-    labels: ["DONE", "IN_PROGRESS", "PENDING"],
+  const statusCounts = useMemo(() => {
+    let done = 0;
+    let inProgress = 0;
+    let pending = 0;
+
+    for (const a of allActions) {
+      if (a.status === ActionStatus.CONCLUIDO) done++;
+      else if (a.status === ActionStatus.PENDENTE) pending++;
+      else if (inProgressSet.has(a.status)) inProgress++;
+    }
+    return { done, inProgress, pending };
+  }, [allActions]);
+
+  // Distribuição por pilar
+  const byPillar = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const a of allActions) {
+      const k = a.pilarEstrategico || "—";
+      map.set(k, (map.get(k) ?? 0) + 1);
+    }
+    return Array.from(map, ([name, value]) => ({ name, value }));
+  }, [allActions]);
+
+  // Distribuição por departamento (achatando a lista)
+  const byDepartment = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const a of allActions) {
+      for (const d of a.departamentosEnvolvidos || []) {
+        map.set(d, (map.get(d) ?? 0) + 1);
+      }
+    }
+    return Array.from(map, ([name, value]) => ({ name, value }));
+  }, [allActions]);
+
+  // Evolução por mês (usando prazo)
+  const byMonth = useMemo(() => {
+    // Contabiliza quantas ações têm prazo em cada mês (YYYY-MM)
+    const map = new Map<string, number>();
+    for (const a of allActions) {
+      if (!a.prazo) continue;
+      const dt = new Date(a.prazo);
+      if (isNaN(+dt)) continue;
+      const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+      map.set(key, (map.get(key) ?? 0) + 1);
+    }
+    const arr = Array.from(map, ([month, value]) => ({ month, value }));
+    // ordem crescente
+    arr.sort((x, y) => x.month.localeCompare(y.month));
+    return arr;
+  }, [allActions]);
+
+  if (loading) return <div className="p-6">Carregando dashboard...</div>;
+  if (error) return <div className="p-6 text-red-600">{error}</div>;
+
+  // ---------------- ChartJS datasets ----------------
+  const statusPieData = {
+    labels: ["Concluídas", "Em andamento", "Pendentes"],
     datasets: [
       {
-        data: [status.DONE, status.IN_PROGRESS, status.PENDING],
-        backgroundColor: [COLORS.green, COLORS.blue, COLORS.orange],
-        borderColor: "#ffffff",
-        borderWidth: 2,
+        data: [statusCounts.done, statusCounts.inProgress, statusCounts.pending],
+        backgroundColor: [COLORS.green, COLORS.blue, COLORS.amber],
+        borderWidth: 0,
       },
     ],
   };
 
-  const pillarData = {
-    labels: Object.keys(perPillar),
+  const pillarBarData = {
+    labels: byPillar.map((p) => p.name),
     datasets: [
       {
-        label: "Ações por Pilar",
-        data: Object.values(perPillar),
-        backgroundColor: COLORS.purple,
+        label: "Ações por pilar",
+        data: byPillar.map((p) => p.value),
+        backgroundColor: COLORS.violet,
       },
     ],
   };
 
-  const deptData = {
-    labels: Object.keys(perDept),
+  const departBarData = {
+    labels: byDepartment.map((d) => d.name),
     datasets: [
       {
-        label: "Ações por Departamento",
-        data: Object.values(perDept),
+        label: "Ações por departamento",
+        data: byDepartment.map((d) => d.value),
         backgroundColor: COLORS.teal,
       },
     ],
   };
 
-  const lineData = {
-    labels: perDay.labels,
+  const monthLineData = {
+    labels: byMonth.map((m) => m.month),
     datasets: [
       {
-        label: "Conclusões por dia",
-        data: perDay.values,
+        label: "Ações com prazo por mês",
+        data: byMonth.map((m) => m.value),
         borderColor: COLORS.blue,
         backgroundColor: COLORS.blue,
-        tension: 0.3,
-        fill: false,
-        pointRadius: 3,
+        tension: 0.2,
       },
     ],
   };
 
-  // ---- UI ----
   return (
-    <div className="app-shell">
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <label style={{ fontWeight: 600 }}>Plano:</label>
-        <select
-          value={planId ?? ""}
-          onChange={(e) => setPlanId(Number(e.target.value))}
-          className="btn secondary"
-        >
-          {plans.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.id} — {p.name}
-            </option>
-          ))}
-        </select>
-      </div>
+    <div className="p-6 space-y-6">
+      <header className="mb-2">
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
+        <p className="text-slate-600">
+          {plans.length} plano(s) • {allActions.length} ação(ões)
+        </p>
+      </header>
 
-      <div
-        className="grid mt-24"
-        style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}
-      >
-        <Kpi title="Total" value={total} />
-        <Kpi title="PENDING" value={status.PENDING} />
-        <Kpi title="IN_PROGRESS" value={status.IN_PROGRESS} />
-        <Kpi title="DONE" value={status.DONE} />
-      </div>
-
-      {err && (
-        <div className="card mt-24" style={{ color: "#b91c1c" }}>
-          {err}
+      {/* Cards de status */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="rounded-lg border p-4">
+          <div className="text-slate-500 text-sm">Concluídas</div>
+          <div className="text-3xl font-bold text-green-600">{statusCounts.done}</div>
         </div>
-      )}
+        <div className="rounded-lg border p-4">
+          <div className="text-slate-500 text-sm">Em andamento</div>
+          <div className="text-3xl font-bold text-blue-600">{statusCounts.inProgress}</div>
+        </div>
+        <div className="rounded-lg border p-4">
+          <div className="text-slate-500 text-sm">Pendentes</div>
+          <div className="text-3xl font-bold text-amber-600">{statusCounts.pending}</div>
+        </div>
+      </section>
 
-      {loading ? (
-        <div className="card mt-24">Carregando…</div>
-      ) : rows.length === 0 ? (
-        <div className="card mt-24">Sem ações para este plano.</div>
-      ) : (
-        <>
-          {/* 3 gráficos superiores */}
-          <div
-            className="grid mt-24"
-            style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}
-          >
-            <div className="card" style={{ height: 360 }}>
-              <h3 style={{ marginBottom: 8 }}>Distribuição por Status</h3>
-              <div style={{ height: 300 }}>
-                <Pie data={pieData} />
-              </div>
-            </div>
+      {/* Tabela rápida de planos */}
+      <section className="rounded-lg border p-4">
+        <h2 className="font-medium mb-3">Planos</h2>
+        <div className="overflow-x-auto">
+          <table className="min-w-[600px] w-full text-sm">
+            <thead>
+              <tr className="text-left border-b">
+                <th className="py-2 pr-3">Código</th>
+                <th className="py-2 pr-3">Nome</th>
+                <th className="py-2 pr-3">Cliente</th>
+                <th className="py-2 pr-3">Ações</th>
+                <th className="py-2 pr-3">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {plans.map((p) => (
+                <tr key={p.id} className="border-b">
+                  <td className="py-2 pr-3">{p.planCode}</td>
+                  <td className="py-2 pr-3">{p.planName}</td>
+                  <td className="py-2 pr-3">{p.clientName}</td>
+                  <td className="py-2 pr-3">{p.actionItems.length}</td>
+                  <td className="py-2 pr-3">{p.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-            <div className="card" style={{ height: 360 }}>
-              <h3 style={{ marginBottom: 8 }}>Ações por Pilar</h3>
-              <div style={{ height: 300 }}>
-                <Bar data={pillarData} options={baseBarOptions} />
-              </div>
-            </div>
+      {/* Gráficos */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="rounded-lg border p-4">
+          <h3 className="font-medium mb-3">Status das ações</h3>
+          <Pie data={statusPieData} />
+        </div>
 
-            <div className="card" style={{ height: 360 }}>
-              <h3 style={{ marginBottom: 8 }}>Ações por Departamento</h3>
-              <div style={{ height: 300 }}>
-                <Bar data={deptData} options={baseBarOptions} />
-              </div>
-            </div>
-          </div>
+        <div className="rounded-lg border p-4">
+          <h3 className="font-medium mb-3">Ações por pilar</h3>
+          <Bar data={pillarBarData} />
+        </div>
 
-          {/* linha de conclusões */}
-          <div className="card mt-24" style={{ height: 380 }}>
-            <h3 style={{ marginBottom: 8 }}>Conclusões ao Longo do Tempo</h3>
-            <div style={{ height: 320 }}>
-              <Line data={lineData} options={baseLineOptions} />
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+        <div className="rounded-lg border p-4">
+          <h3 className="font-medium mb-3">Ações por departamento</h3>
+          <Bar data={departBarData} />
+        </div>
 
-// ---- Componente simples de KPI ----
-function Kpi({ title, value }: { title: string; value: number }) {
-  return (
-    <div className="card">
-      <div style={{ fontSize: 12, color: "#6b7280", fontWeight: 600 }}>
-        {title}
-      </div>
-      <div style={{ fontSize: 28, fontWeight: 700, marginTop: 4 }}>{value}</div>
+        <div className="rounded-lg border p-4">
+          <h3 className="font-medium mb-3">Prazo de ações por mês</h3>
+          <Line data={monthLineData} />
+        </div>
+      </section>
     </div>
   );
 }
