@@ -1,3 +1,4 @@
+from datetime import datetime 
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -9,6 +10,22 @@ router = APIRouter()
 
 
 # -------- Plans --------
+@router.get("/")
+def list_plans(db: Session = Depends(get_db)):
+    # Imprime o horário em que a função foi chamada
+    print(f"--- ROTA /plans/ CHAMADA EM: {datetime.now()} ---")
+
+    try:
+        print(f"INICIANDO CONSULTA AO BANCO: {datetime.now()}")
+        plans = db.execute(select(models.Plan)).scalars().all()
+        print(f"CONSULTA AO BANCO FINALIZADA: {datetime.now()}")
+
+        print(f"RETORNANDO {len(plans)} PLANOS EM: {datetime.now()}")
+        return plans
+    except Exception as e:
+        print(f"!!! OCORREU UM ERRO: {e} EM: {datetime.now()}")
+        raise
+    
 @router.get("/", response_model=List[schemas.PlanOut])
 def list_plans(db: Session = Depends(get_db)):
     plans = db.execute(select(models.Plan)).scalars().all()
