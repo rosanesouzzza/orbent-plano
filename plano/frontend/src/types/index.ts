@@ -1,3 +1,5 @@
+import type { FC } from 'react';
+
 // Tipos e enums padronizados para toda a app
 
 export enum PlanStatus {
@@ -63,6 +65,9 @@ export interface Plan {
   planOwnerName: string;
   status: PlanStatus;
   actionItems: ActionItem[];
+  // A API também envia estes campos em alguns contextos
+  name?: string;
+  owner?: string;
 }
 
 export type NewPlanData = Omit<
@@ -77,4 +82,19 @@ export interface SavedReport {
   summaryContent: string;
   dataUsed: ActionItem[];
   generatedAt: string; // ISO
+}
+
+export type PlanView =
+  | "home"
+  | "dashboard"
+  | "plan"
+  | "creator"
+  | "report"
+  | "global-report"
+  | "ai-planner";
+
+export interface NavItem {
+  id: PlanView;
+  label: string;
+  icon: FC<{ className?: string }>;
 }

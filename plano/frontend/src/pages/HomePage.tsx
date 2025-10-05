@@ -1,48 +1,31 @@
-import React, { useEffect, useState } from 'react';
-// Verifique se o caminho do import está correto para seu projeto
-import { getPlans } from '../lib/api'; 
-import type { Plan } from '../types';
+import React from 'react';
 
-export default function HomePage() {
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await getPlans();
-        setPlans(data);
-      } catch (e: any) {
-        setError(e?.message || 'Erro ao carregar planos');
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  if (loading) return <div className="p-6">Carregando...</div>;
-  if (error) return <div className="p-6 text-red-600">{error}</div>;
-
+const HomePage: React.FC = () => {
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-4">Planos existentes</h1>
-      <ul className="space-y-2">
-        {Array.isArray(plans) && plans.map((p: Plan) => (
-          <li key={p.id} className="rounded border p-3">
-            {/* AQUI ESTÁ A CORREÇÃO:
-              Trocamos 'planCode' e 'planName' por 'p.id' e 'p.name' 
-            */}
-            <div className="font-medium">{p.id} — {p.name}</div>
-            <div className="text-sm text-gray-600">
-              {/* E AQUI:
-                Trocamos 'clientName' por 'p.owner'
-              */}
-              Cliente: {p.owner} • Ações: {(p.actionItems ?? []).length}
-            </div>
-          </li>
-        ))}
-      </ul>
+    <div className="p-6 space-y-4">
+      <header>
+        <h1 className="text-2xl font-semibold text-secondary">Bem-vindo ao Orbent Action Plan</h1>
+        <p className="text-neutral-600">
+          Utilize o menu lateral para navegar entre o dashboard, os planos de ação e os relatórios.
+        </p>
+      </header>
+
+      <section className="grid gap-4 md:grid-cols-2">
+        <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+          <h2 className="text-lg font-medium text-secondary">Planos em destaque</h2>
+          <p className="mt-2 text-sm text-neutral-600">
+            Assim que você selecionar um plano pelo menu, os detalhes aparecerão aqui.
+          </p>
+        </div>
+        <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+          <h2 className="text-lg font-medium text-secondary">Relatórios recentes</h2>
+          <p className="mt-2 text-sm text-neutral-600">
+            Gere relatórios personalizados e acompanhe os resultados das ações implementadas.
+          </p>
+        </div>
+      </section>
     </div>
   );
-}
+};
+
+export default HomePage;

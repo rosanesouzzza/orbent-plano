@@ -1,28 +1,62 @@
-import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
-import HomePage from "@/pages/HomePage";
-import DashboardPage from "@/pages/DashboardPage";
-import ReportsPage from "@/pages/ReportsPage";
-import "./index.css";
+// Em: C:\orbent-dev\plano\frontend\src\App.tsx
 
-export default function App() {
+import React, { useState } from 'react';
+
+// CORREÇÃO APLICADA AQUI: Apontamos para o arquivo .tsx dentro da pasta
+import { Sidebar } from './components/Sidebar';
+import { Header } from './components/Header';
+import { Footer } from './components/Footer';
+
+// Nossas páginas que já funcionam
+import HomePage from './pages/HomePage';
+import DashboardPage from './pages/DashboardPage';
+import ReportsPage from './pages/ReportsPage';
+
+function App() {
+  // Simples controle de qual página mostrar. Vamos começar com a HomePage.
+  const [currentView, setCurrentView] = useState('home');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  const renderMainContent = () => {
+    if (currentView === 'dashboard') {
+      return <DashboardPage />;
+    }
+    if (currentView === 'reports') {
+      return <ReportsPage />;
+    }
+    // Por padrão, mostra a Home
+    return <HomePage />;
+  };
+
   return (
-    <BrowserRouter>
-      <nav className="navbar">
-        <div>Orbent Action Plan</div>
-        <div>
-          <NavLink to="/" style={{ marginRight: 12 }}>Home</NavLink>
-          <NavLink to="/dashboard" style={{ marginRight: 12 }}>Dashboard</NavLink>
-          <NavLink to="/reports">Reports</NavLink>
-        </div>
-      </nav>
+    <div className="flex h-screen bg-base-100">
+      {/* Ainda precisaremos passar as propriedades corretas aqui depois,
+        mas por enquanto o importante é fazer o layout aparecer.
+      */}
+      <Sidebar 
+        currentView={currentView}
+        setCurrentView={setCurrentView}
+        currentPlan={null}
+        onHome={() => setCurrentView('home')}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        onNavigate={setCurrentView}
+        onOpenCreatePlanModal={() => alert('Abrir modal de criação')}
+      />
 
-      <div className="app-shell">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/reports" element={<ReportsPage />} />
-        </Routes>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header 
+          title="Orbent Action Plan"
+        />
+
+        <main className="flex-1 overflow-y-auto p-6">
+          {renderMainContent()}
+        </main>
+        
+        <Footer />
       </div>
-    </BrowserRouter>
+    </div>
   );
 }
+
+export default App;

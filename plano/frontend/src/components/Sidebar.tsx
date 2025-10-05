@@ -1,3 +1,5 @@
+// Em: C:\orbent-dev\plano\frontend\src\components\Sidebar.tsx
+
 import React from 'react';
 import { Plan, PlanView, NavItem } from '../types';
 import { DashboardIcon } from './icons/DashboardIcon';
@@ -9,6 +11,7 @@ import { ChevronsLeftIcon } from './icons/ChevronsLeftIcon';
 import { AIPlannerIcon } from './icons/AIPlannerIcon';
 import { AddIcon } from './icons/AddIcon';
 
+// Renomeado de 'Props' para 'SidebarProps' para clareza
 interface SidebarProps {
   currentView: PlanView;
   setCurrentView: (view: PlanView) => void;
@@ -21,13 +24,13 @@ interface SidebarProps {
   onOpenCreatePlanModal: () => void;
 }
 
-// Plan-specific navigation items
 const planNavItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: DashboardIcon },
     { id: 'plan', label: 'Plano de Ação', icon: PlanIcon },
     { id: 'report', label: 'Relatórios', icon: ReportIcon },
 ];
 
+// NOME DO COMPONENTE CORRIGIDO AQUI
 export const Sidebar: React.FC<SidebarProps> = ({ 
     currentView, 
     setCurrentView, 
@@ -62,14 +65,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
 
-
       {currentPlan && (
         <div className={`px-4 py-2 border-b border-white/10 animate-fade-in overflow-hidden ${isCollapsed ? 'h-0 p-0 border-none' : 'h-auto'}`}>
           <p className="text-xs text-neutral-400 mb-1">PROJETO ATUAL</p>
-          <h2 className="font-bold text-base truncate" title={currentPlan.planName}>
-            <span className="font-mono text-sm">[{currentPlan.planCode}]</span> {currentPlan.planName}
+          {/* CORREÇÕES AQUI: Usando 'name' e 'owner' */}
+          <h2 className="font-bold text-base truncate" title={currentPlan.name}>
+            <span className="font-mono text-sm">[{currentPlan.id}]</span> {currentPlan.name}
           </h2>
-          <p className="text-sm text-neutral-300 truncate" title={currentPlan.clientName}>{currentPlan.clientName}</p>
+          <p className="text-sm text-neutral-300 truncate" title={currentPlan.owner}>{currentPlan.owner}</p>
         </div>
       )}
 
